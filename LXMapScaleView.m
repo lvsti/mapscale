@@ -142,7 +142,7 @@ static const double kFeetPerMeter = 1.0/0.3048;
 	CLLocationDistance horizontalDistance = MKMetersPerMapPointAtLatitude(mapView.centerCoordinate.latitude);
 	float metersPerPixel = mapView.visibleMapRect.size.width * horizontalDistance / mapView.bounds.size.width;
 	
-	CGFloat maxScaleWidth = self.bounds.size.width-40;
+	CGFloat maxScaleWidth = maxWidth-40;
 	
 	NSUInteger maxValue = 0;
 	NSString* unit = @"";
@@ -236,7 +236,7 @@ static const double kFeetPerMeter = 1.0/0.3048;
 // -----------------------------------------------------------------------------
 - (void)setFrame:(CGRect)aFrame
 {
-	[self setBounds:aFrame];
+	[self setMaxWidth:aFrame.size.width];
 }
 
 
@@ -245,10 +245,7 @@ static const double kFeetPerMeter = 1.0/0.3048;
 // -----------------------------------------------------------------------------
 - (void)setBounds:(CGRect)aBounds
 {
-	if ( aBounds.size.width < maxWidth && aBounds.size.width > kMinimumWidth )
-	{
-		[self setMaxWidth:aBounds.size.width];
-	}
+	[self setMaxWidth:aBounds.size.width];
 }
 
 
@@ -257,7 +254,7 @@ static const double kFeetPerMeter = 1.0/0.3048;
 // -----------------------------------------------------------------------------
 - (void)setMaxWidth:(CGFloat)aMaxWidth
 {
-	if ( maxWidth != aMaxWidth )
+	if ( maxWidth != aMaxWidth && aMaxWidth >= kMinimumWidth )
 	{
 		maxWidth = aMaxWidth;
 		
@@ -301,67 +298,7 @@ static const double kFeetPerMeter = 1.0/0.3048;
 	{
 		position = aPosition;
 
-		if ( !mapView )
-		{
-			return;
-		}
-		
-		CGSize mapSize = mapView.bounds.size;
-		CGRect frame = self.bounds;
-		
-		switch (position)
-		{
-			case kLXMapScalePositionTopLeft:
-			{
-				frame.origin = CGPointMake(padding.left,
-										   padding.top);
-				self.autoresizingMask = UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleBottomMargin;
-				break;
-			}
-				
-			case kLXMapScalePositionTop:
-			{
-				frame.origin = CGPointMake((mapSize.width - frame.size.width) / 2.0f,
-										   padding.top);
-				self.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleBottomMargin;
-				break;
-			}
-				
-			case kLXMapScalePositionTopRight:
-			{
-				frame.origin = CGPointMake(mapSize.width - padding.right - frame.size.width,
-										   padding.top);
-				self.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleBottomMargin;
-				break;
-			}
-
-			default:
-			case kLXMapScalePositionBottomLeft:
-			{
-				frame.origin = CGPointMake(padding.left,
-										   mapSize.height - padding.bottom - frame.size.height);
-				self.autoresizingMask = UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleTopMargin;
-				break;
-			}
-				
-			case kLXMapScalePositionBottom:
-			{
-				frame.origin = CGPointMake((mapSize.width - frame.size.width) / 2.0f,
-										   mapSize.height - padding.bottom - frame.size.height);
-				self.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleTopMargin;
-				break;
-			}
-				
-			case kLXMapScalePositionBottomRight:
-			{
-				frame.origin = CGPointMake(mapSize.width - padding.right - frame.size.width,
-										   mapSize.height - padding.bottom - frame.size.height);
-				self.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleTopMargin;
-				break;
-			}
-		}
-		
-		super.frame = frame;
+		[self setNeedsLayout];
 	}
 }
 
@@ -383,6 +320,64 @@ static const double kFeetPerMeter = 1.0/0.3048;
 								 unitLabelSize.width,
 								 unitLabelSize.height);
 	
+	CGSize mapSize = mapView.bounds.size;
+	CGRect frame = self.bounds;
+	frame.size.width = CGRectGetMaxX(unitLabel.frame) - CGRectGetMinX(zeroLabel.frame);
+	
+	switch (position)
+	{
+		case kLXMapScalePositionTopLeft:
+		{
+			frame.origin = CGPointMake(padding.left,
+									   padding.top);
+			self.autoresizingMask = UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleBottomMargin;
+			break;
+		}
+			
+		case kLXMapScalePositionTop:
+		{
+			frame.origin = CGPointMake((mapSize.width - frame.size.width) / 2.0f,
+									   padding.top);
+			self.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleBottomMargin;
+			break;
+		}
+			
+		case kLXMapScalePositionTopRight:
+		{
+			frame.origin = CGPointMake(mapSize.width - padding.right - frame.size.width,
+									   padding.top);
+			self.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleBottomMargin;
+			break;
+		}
+			
+		default:
+		case kLXMapScalePositionBottomLeft:
+		{
+			frame.origin = CGPointMake(padding.left,
+									   mapSize.height - padding.bottom - frame.size.height);
+			self.autoresizingMask = UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleTopMargin;
+			break;
+		}
+			
+		case kLXMapScalePositionBottom:
+		{
+			frame.origin = CGPointMake((mapSize.width - frame.size.width) / 2.0f,
+									   mapSize.height - padding.bottom - frame.size.height);
+			self.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleRightMargin|UIViewAutoresizingFlexibleTopMargin;
+			break;
+		}
+			
+		case kLXMapScalePositionBottomRight:
+		{
+			frame.origin = CGPointMake(mapSize.width - padding.right - frame.size.width,
+									   mapSize.height - padding.bottom - frame.size.height);
+			self.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin|UIViewAutoresizingFlexibleTopMargin;
+			break;
+		}
+	}
+	
+	super.frame = frame;
+
 	[self setNeedsDisplay];
 }
 
