@@ -13,6 +13,7 @@ static const CGFloat kMinimumWidth = 100.0f;
 static const UIEdgeInsets kDefaultPadding = {10,10,10,10};
 
 static const double kFeetPerMeter = 1.0/0.3048;
+static const double kFeetPerMile = 5280.0;
 
 
 
@@ -189,12 +190,12 @@ static const double kFeetPerMeter = 1.0/0.3048;
 	{
 		float feet = maxScaleWidth*metersPerPixel*kFeetPerMeter;
 		
-		if ( feet > 5280.0f )
+		if ( feet > kFeetPerMile )
 		{
 			// user mile scale
 			unit = @"mi";
 			static const double kMileScale[] = {1,2,5,10,20,50,100,200,500,1000,2000,5000,10000,20000,50000};
-			float miles = feet / 5280.0f;
+			float miles = feet / kFeetPerMile;
 			
 			for ( int i = 0; i < 15; ++i )
 			{
@@ -299,6 +300,20 @@ static const double kFeetPerMeter = 1.0/0.3048;
 		position = aPosition;
 
 		[self setNeedsLayout];
+	}
+}
+
+
+// -----------------------------------------------------------------------------
+// LXMapScaleView::setMetric:
+// -----------------------------------------------------------------------------
+- (void)setMetric:(BOOL)aIsMetric
+{
+	if ( metric != aIsMetric )
+	{
+		metric = aIsMetric;
+		
+		[self update];
 	}
 }
 
